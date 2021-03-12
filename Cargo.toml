@@ -4,5 +4,21 @@ version = "0.1.0"
 authors = ["George Shuklin <george.shuklin@gmail.com>"]
 edition = "2018"
 
+[[bin]]
+name = "sdl_random"
+path = "src/main.rs"
+
+[lib]
+name = "lib"
+path = "src/lib.rs"
+
+[[bench]]
+name = "noise"
+harness = false
+
 [dependencies]
 sdl2 = {version="*"}
+bytemuck = "*"
+
+[dev-dependencies]
+criterion = "*"
