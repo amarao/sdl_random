@@ -17,8 +17,9 @@ pub fn main() {
         .unwrap();
     let mut canvas = window
         .into_canvas()
-        // .present_vsync()
+        .present_vsync()
         .accelerated()
+        // .software()
         .build().unwrap();
     sdl_context.mouse().show_cursor(false);
     let (width, height) = canvas.output_size().unwrap();
@@ -57,6 +58,11 @@ pub fn main() {
                 _ => {}
             }
         }
+        let new_x = factor.next128() as u32 % width;
+        let new_y = factor.next128() as u32 % height;
+        let new_width = factor.next128() as u32 % (width-new_x);
+        let new_height = factor.next128() as u32 % (height-new_y);
+        canvas.set_viewport(Some(sdl2::rect::Rect::new(new_x as i32, new_y as i32, new_width, new_height)));
         canvas.present();
 
         if start.elapsed() > std::time::Duration::new(1, 0){
