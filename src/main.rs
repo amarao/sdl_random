@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use lib::{noise_flakes, fade_in_out};
+use lib::{*};
 use lib::Factor;
 
 
@@ -17,9 +17,8 @@ pub fn main() {
         .unwrap();
     let mut canvas = window
         .into_canvas()
-        .present_vsync()
+        // .present_vsync()
         .accelerated()
-        // .software()
         .build().unwrap();
     sdl_context.mouse().show_cursor(false);
     let (width, height) = canvas.output_size().unwrap();
@@ -28,38 +27,38 @@ pub fn main() {
     let mut texture = texture_creator
         .create_texture_streaming(sdl2::pixels::PixelFormatEnum::ABGR8888, width as u32, height as u32)
         .unwrap();
-    let mut background = texture_creator
-        .create_texture_static(sdl2::pixels::PixelFormatEnum::ABGR8888, width as u32, height as u32)
+    let mut whole_screen = texture_creator
+        .create_texture_streaming(sdl2::pixels::PixelFormatEnum::ABGR8888, width as u32, height as u32)
         .unwrap();
-    background.update(
-        None, &vec![0; (width*height) as usize], (width*4) as usize
+    whole_screen.update( //fill?
+        None, &vec![0; (width*height*4) as usize], (width*4) as usize
     ).unwrap();
-    background.set_blend_mode(sdl2::render::BlendMode::Mod);
-    texture.set_blend_mode(sdl2::render::BlendMode::Add);
+    whole_screen.set_blend_mode(sdl2::render::BlendMode::None);
+    texture.set_blend_mode(sdl2::render::BlendMode::Blend);
     let mut start = std::time::Instant::now();
     let  mut last_printed:u64 = 0;
     let mut frames:u64 = 0;
     let mut factor = Factor::new(0xDEADBEAF_ABBADEAD_12345678_AABBCCDD);
     'running: loop {
         frames +=1;
-        if frames % 4 == 0 {
-            texture.with_lock(
-                None,
-                |bytearray, _| {noise_flakes(bytearray, & mut factor)}
-            ).unwrap();
-        }
-        else{
-            texture.with_lock(
+        let rect_x = (frames % width as u64) as u32;
+        let rect_y = (frames % height as u64) as u32;
+        let rect_width = (width-rect_x)/2;
+        let rect_height =  (height-rect_y)/2;
+        texture.with_lock(
+            None,
+            |bytearray, _| {noise_fill(bytearray, & mut factor)}
+        ).unwrap();
+        whole_screen.with_lock(
                 None,
                 |bytearray, _| {fade_in_out(bytearray, frames)}
             ).unwrap();
-        }
-        let new_x = factor.next128() as u32 % width;
-        let new_y = factor.next128() as u32 % height;
-        let new_width = factor.next128() as u32 % (width-new_x);
-        let new_height = factor.next128() as u32 % (height-new_y);
-        canvas.copy(&background, None, None).unwrap();
-        canvas.copy(&texture, None, sdl2::rect::Rect::new(new_x as i32, new_y as i32, new_width, new_height)).unwrap();
+        // if frames % 32 == 0{
+        //     canvas.copy(&background, None, None).unwrap();
+        // }
+
+        canvas.copy(&whole_screen, None, None).unwrap();
+        canvas.copy(&texture, None, sdl2::rect::Rect::new(rect_x as i32, rect_y as i32, rect_width, rect_height)).unwrap();
         
         for event in event_pump.poll_iter() {
             match event {
@@ -80,7 +79,7 @@ pub fn main() {
             let fc = frames - last_printed;
             last_printed = frames;
             start = std::time::Instant::now();
-            println!("{:.1}", fc as f64/dt);
+            println!("\nfps: {:.1}\n", fc as f64/dt);
         }
 
     }

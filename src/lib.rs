@@ -52,25 +52,31 @@ pub fn noise_fill(bytearray: &mut [u8], factor: &mut Factor) {
 
 pub fn noise_flakes(bytearray: &mut [u8], factor: &mut Factor) {
     
-    let u128_slice: &mut [u128] = bytemuck::cast_slice_mut(bytearray);
-    for lll in u128_slice{
+    let u32_slice: &mut [u32] = bytemuck::cast_slice_mut(bytearray);
+    for lll in u32_slice{
         if factor.next128() % 111 == 0{
-            *lll = factor.next128()&0xFFFFFFFF;
+            *lll = factor.next128() as u32;
+        }else{
+            *lll = 0;
         }
     }
 }
 
 pub fn fade_in_out(bytearray: &mut [u8], frames: u64){
+    let single = frames as u8;
+    
     let base = {
         if frames & 0x100 == 0{
-            u128::from_ne_bytes([frames  as u8;16])
+            // print!("{} -> {},", frames, single);
+            u32::from_ne_bytes([single, single, single, 255])
         }
         else{
-            u128::from_ne_bytes([0 - frames  as u8;16])
+            // print!("{} => {},", frames, 0-single-1);
+            u32::from_ne_bytes([0-single-1, 0-single-1, 0-single-1, 255])
         }
     };
-    let u128_slice: &mut [u128] = bytemuck::cast_slice_mut(bytearray);
-    for lll in u128_slice{
+    let u32_slice: &mut [u32] = bytemuck::cast_slice_mut(bytearray);
+    for lll in u32_slice{
         *lll = base;
     }
 }
