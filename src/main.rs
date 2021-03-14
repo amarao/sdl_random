@@ -43,8 +43,8 @@ pub fn main() {
         frames +=1;
         let rect_x = (frames % width as u64) as u32;
         let rect_y = (frames % height as u64) as u32;
-        let rect_width = (width-rect_x)/2;
-        let rect_height =  (height-rect_y)/2;
+        let rect_width = width-rect_x;
+        let rect_height =  height-rect_y;
         texture.with_lock(
             None,
             |bytearray, _| {noise_fill(bytearray, & mut factor)}
